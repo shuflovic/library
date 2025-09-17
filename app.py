@@ -88,10 +88,10 @@ upload_to_supabase(uploaded_file)
 if not st.session_state.libraries:
     st.session_state.libraries = load_libraries_from_supabase()
 
-# Sidebar selection with radio buttons
+# Sidebar selection
 available_libraries = list(st.session_state.libraries.keys())
 if available_libraries:
-    selected_library = st.sidebar.radio("Select Library", available_libraries)
+    selected_library = st.sidebar.selectbox("Select Library", available_libraries)
     df = st.session_state.libraries[selected_library]
     
     # Three-column display with library name as subheader
