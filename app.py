@@ -5,7 +5,7 @@ from io import BytesIO
 
 # Manual input for Supabase credentials
 st.title("Universal Library Manager - Manual Setup")
-supabase_url = st.text_input("Enter Supabase URL", "https://yourproject.supabase.co")
+supabase_url = st.text_input("Enter Supabase URL", "https://rigsljqkzlnemypqjlbk.supabase.co")
 supabase_key = st.text_input("Enter Supabase Key", "", type="password")
 
 if not supabase_url or not supabase_key:
