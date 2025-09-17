@@ -1,19 +1,19 @@
 import streamlit as st
 import pandas as pd
-import os
 from supabase import create_client, Client
 from io import BytesIO
 
-# Supabase configuration - Use Streamlit secrets or environment variables
-SUPABASE_URL = st.secrets.get("SUPABASE_URL", os.getenv("SUPABASE_URL"))
-SUPABASE_KEY = st.secrets.get("SUPABASE_KEY", os.getenv("SUPABASE_KEY"))  # Use anon key for reads, service key for writes
+# Manual input for Supabase credentials
+st.title("Universal Library Manager - Manual Setup")
+supabase_url = st.text_input("Enter Supabase URL", "https://yourproject.supabase.co")
+supabase_key = st.text_input("Enter Supabase Key", "", type="password")
 
-if not SUPABASE_URL or not SUPABASE_KEY:
-    st.error("Supabase credentials not found. Please set SUPABASE_URL and SUPABASE_KEY in secrets.toml or environment variables.")
+if not supabase_url or not supabase_key:
+    st.error("Please enter both Supabase URL and Key to proceed.")
     st.stop()
 
 # Initialize Supabase client
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+supabase: Client = create_client(supabase_url, supabase_key)
 
 BUCKET_NAME = "libraries"  # Change this to your Supabase storage bucket name
 
@@ -26,7 +26,6 @@ if 'libraries' not in st.session_state:
 def load_libraries_from_supabase():
     libraries = {}
     try:
-        # List files in the bucket
         response = supabase.storage.from_(BUCKET_NAME).list()
         files = response.data if response.data else []
         
@@ -34,7 +33,6 @@ def load_libraries_from_supabase():
             file_name = file_info['name']
             if file_name.endswith('.csv'):
                 library_name = file_name.replace('.csv', '')
-                # Download file
                 file_data = supabase.storage.from_(BUCKET_NAME).download(file_name)
                 df = pd.read_csv(BytesIO(file_data))
                 libraries[library_name] = df
@@ -47,60 +45,33 @@ def load_libraries_from_supabase():
 def upload_to_supabase(uploaded_file):
     if uploaded_file is not None:
         try:
-            # Upload to Supabase storage
             file_name = uploaded_file.name
             library_name = file_name.replace('.csv', '')
             
-            # Check if file already exists
             existing_files = supabase.storage.from_(BUCKET_NAME).list()
             existing_names = [f['name'].replace('.csv', '') for f in existing_files.data if f['name'].endswith('.csv')]
             if library_name in existing_names:
                 st.warning(f"Library '{library_name}' already exists. Overwriting...")
             
-            # Upload
             supabase.storage.from_(BUCKET_NAME).upload(file_name, uploaded_file.read())
             st.success(f"Uploaded '{library_name}' to Supabase storage!")
-            
-            # Clear cache and rerun to reload
+            st.session_state.libraries[library_name] = pd.read_csv(BytesIO(uploaded_file.read()))  # Load into session state
             st.cache_data.clear()
             st.rerun()
-            return library_name
         except Exception as e:
             st.error(f"Error uploading to Supabase: {str(e)}")
     return None
 
-# Load static libraries from local folder (fallback for local dev)
-def load_static_libraries():
-    folder_path = "./Library"
-    if os.path.exists(folder_path):
-        csv_files = [f for f in os.listdir(folder_path) if f.endswith('.csv')]
-        for file in csv_files:
-            file_path = os.path.join(folder_path, file)
-            library_name = file.replace('.csv', '')
-            if library_name not in st.session_state.libraries:
-                try:
-                    df = pd.read_csv(file_path)
-                    st.session_state.libraries[library_name] = df
-                    st.info(f"Loaded static {library_name}")
-                except Exception as e:
-                    st.error(f"Error reading static {file}: {str(e)}")
-
 # Main app
-st.title("Universal Library Manager")
-
-# Load data
 if st.button("Refresh Libraries from Supabase"):
     st.session_state.libraries = load_libraries_from_supabase()
     st.rerun()
 
-# Load static if available (for local/Replit)
-load_static_libraries()
-
 # File uploader
 uploaded_file = st.file_uploader("Upload a CSV file to Supabase", type="csv")
-new_library = upload_to_supabase(uploaded_file)
+upload_to_supabase(uploaded_file)
 
-# Load from Supabase if no static or on demand
+# Load from Supabase if no libraries
 if not st.session_state.libraries:
     st.session_state.libraries = load_libraries_from_supabase()
 
@@ -126,7 +97,6 @@ with st.expander("Setup Instructions"):
     1. Install supabase-py: Add `supabase` to your `requirements.txt`.
     2. Create a Supabase project and a storage bucket named 'libraries'.
     3. Set policies: Allow public read (or authenticated), and insert/update for your key.
-    4. In Streamlit Cloud: Add SUPABASE_URL and SUPABASE_KEY to app secrets.
-    5. In Replit/Local: Set as environment variables.
-    6. For static files: Keep Library folder for local dev, but uploads go to Supabase.
+    4. Enter your Supabase URL and Key manually above.
+    5. Upload a CSV to start, or ensure files exist in the Supabase bucket.
     """)
