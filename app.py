@@ -83,33 +83,22 @@ def upload_picture_for_books(uploaded_image):
             st.image(uploaded_image, caption="Uploaded Image", use_column_width=True)
             st.write("Analyzing image for book recognition...")
 
-            # Read and encode the image
+            # Read the image
             image_bytes = uploaded_image.read()
-            image_base64 = base64.b64encode(image_bytes).decode('utf-8')
-            image_data = f"data:image/jpeg;base64,{image_base64}" if uploaded_image.type == 'image/jpeg' else f"data:image/png;base64,{image_base64}"
 
-            # Use Grok's image analysis capability (simulated here; in practice, this would be handled by the system)
-            # For this example, we'll simulate the AI response with book data from the image
-            # In a real setup, the system would analyze the image and return recognized books
-            # Assuming the image contains books like in the conversation history, we'll use sample data
-            ai_response = """
-Based on the uploaded image of a bookshelf, I recognize the following books:
+            # Simulate AI analysis (Grok would process the image)
+            st.write("Simulating AI book recognition...")
+            recognized_books = [
+                {"Author": "Kate Atkinson", "Title": "Shrines of Gaiety", "Publication Year": 2022},
+                {"Author": "Tracy Chevalier", "Title": "Falling Angels", "Publication Year": 2001},
+                {"Author": "Isabel Allende", "Title": "The House of the Spirits", "Publication Year": 1982}
+            ]
 
-Author,Title,Publication Year
-Kate Atkinson,Shrines of Gaiety,2022
-Kate Atkinson,Transcription,2018
-Tracy Chevalier,Falling Angels,2001
-Isabel Allende,The House of the Spirits,1982
-Barbara Kingsolver,The Lacuna,2009
-Caitlin Moran,How to Be a Woman,2011
-            """
-
-            # Parse the AI response into DataFrame
-            from io import StringIO
-            df = pd.read_csv(StringIO(ai_response))
+            # Convert to DataFrame
+            df = pd.DataFrame(recognized_books)
             
-            # Generate CSV filename
-            library_name = "recognized_books"
+            # Use image filename (without extension) as library name
+            library_name = uploaded_image.name.rsplit('.', 1)[0]  # Remove .jpg/.png
             file_name = f"{library_name}.csv"
             
             # Upload to Supabase
@@ -117,9 +106,10 @@ Caitlin Moran,How to Be a Woman,2011
             supabase.storage.from_(BUCKET_NAME).upload(file_name, csv_bytes)
             st.success(f"Uploaded recognized books '{library_name}' to Supabase storage!")
             
-            # Load into session state
+            # Load into session state and select new library
             st.session_state.libraries[library_name] = df
             st.cache_data.clear()
+            st.session_state.selected_library = library_name  # Set radio to new library
             
             # Display the recognized books
             st.subheader("Recognized Books from Image")
@@ -127,6 +117,34 @@ Caitlin Moran,How to Be a Woman,2011
             
         except Exception as e:
             st.error(f"Error processing image: {str(e)}")
+
+if uploaded_image:
+    upload_picture_for_books(uploaded_image)
+
+# Approved button to clear image
+if 'selected_library' in st.session_state and st.button("Approved"):
+    if 'uploaded_image' in st.session_state:
+        del st.session_state['uploaded_image']
+    st.experimental_rerun()
+
+# Sidebar selection with radio buttons
+available_libraries = list(st.session_state.libraries.keys())
+if available_libraries:
+    selected_library = st.sidebar.radio("Select Library", available_libraries, index=available_libraries.index(st.session_state.get('selected_library', available_libraries[0]) if available_libraries else 0))
+    df = st.session_state.libraries[selected_library]
+   
+    # Three-column display with library name only in first column
+    col1, col2, col3 = st.columns(3)
+    total_rows = len(df)
+    with col1:
+        st.subheader(selected_library)
+        st.dataframe(df.iloc[:total_rows//3])
+    with col2:
+        st.dataframe(df.iloc[total_rows//3:2*total_rows//3])
+    with col3:
+        st.dataframe(df.iloc[2*total_rows//3:])
+else:
+    st.info("No libraries available. Upload a CSV or ensure files are in Supabase storage.")
 
 # Main app
 if st.button("Refresh Libraries from Supabase"):
