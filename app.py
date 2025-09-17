@@ -3,10 +3,7 @@ import pandas as pd
 from supabase import create_client, Client
 from io import BytesIO
 
-# Manual input for Supabase credentials
-st.sidebar.title("Universal Library Manager - Manual Setup")
-supabase_url = st.sidebar.text_input("Enter Supabase URL", "https://rigsljqkzlnemypqjlbk.supabase.co")
-supabase_key = st.sidebar.text_input("Enter Supabase Key", "", type="password")
+
 
 if not supabase_url or not supabase_key:
     st.error("Please enter both Supabase URL and Key to proceed.")
@@ -108,6 +105,11 @@ if available_libraries:
         st.dataframe(df.iloc[2*total_rows//3:])
 else:
     st.info("No libraries available. Upload a CSV or ensure files are in Supabase storage.")
+
+# Manual input for Supabase credentials
+st.sidebar.title("Universal Library Manager - Manual Setup")
+supabase_url = st.sidebar.text_input("Enter Supabase URL", "https://rigsljqkzlnemypqjlbk.supabase.co")
+supabase_key = st.sidebar.text_input("Enter Supabase Key", "", type="password")
 
 # Instructions
 with st.expander("Setup Instructions"):
