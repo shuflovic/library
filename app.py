@@ -19,6 +19,8 @@ BUCKET_NAME = "libraries"  # Change this to your Supabase storage bucket name
 # Initialize session state
 if 'libraries' not in st.session_state:
     st.session_state.libraries = {}
+if 'approved' not in st.session_state:
+    st.session_state.approved = False
 
 # Function to load libraries from Supabase storage
 @st.cache_data(ttl=300)  # Cache for 5 minutes
@@ -76,7 +78,7 @@ def upload_to_supabase(uploaded_file):
 
 # Function to analyze image and generate book list CSV
 def upload_picture_for_books():
-    if 'uploaded_image' in st.session_state and st.session_state.uploaded_image is not None:
+    if 'uploaded_image' in st.session_state and st.session_state.uploaded_image is not None and not st.session_state.approved:
         try:
             # Display the uploaded image
             st.image(st.session_state.uploaded_image, caption="Uploaded Image", use_column_width=True)
@@ -130,13 +132,15 @@ upload_to_supabase(uploaded_file)
 uploaded_image = st.sidebar.file_uploader("Upload an Image for Book Recognition", type=["jpg", "jpeg", "png"])
 if uploaded_image and 'uploaded_image' not in st.session_state:
     st.session_state.uploaded_image = uploaded_image
+    st.session_state.approved = False  # Reset approval on new upload
 upload_picture_for_books()
 
 # Approved button to clear image
 if 'selected_library' in st.session_state and st.button("Approved"):
     if 'uploaded_image' in st.session_state:
         del st.session_state['uploaded_image']
-        st.write("Image cleared")
+    st.session_state.approved = True  # Set approval flag
+    st.write("Image cleared")
     st.rerun()
 
 # Load from Supabase if no libraries
