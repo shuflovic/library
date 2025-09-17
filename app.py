@@ -1,11 +1,25 @@
 import streamlit as st
 import pandas as pd
 import os
+import shutil
 
-# Sidebar filter for libraries
-selected_library = st.sidebar.selectbox("Select Library", ["library 1", "library 2"])
+# Function to handle CSV file upload
+def upload_csv():
+    uploaded_file = st.file_uploader("Upload a CSV file", type="csv")
+    if uploaded_file is not None:
+        file_path = os.path.join("Library", uploaded_file.name)
+        with open(file_path, "wb") as f:
+            f.write(uploaded_file.getbuffer())
+        st.success(f"File {uploaded_file.name} uploaded to Library folder!")
+        return uploaded_file.name.replace('.csv', '')
+    return None
 
-# Read all CSV files in the Library folder (relative path)
+# Upload button and process
+new_library = upload_csv()
+if new_library:
+    st.experimental_rerun()
+
+# Read all CSV files in the Library folder
 folder_path = "./Library"
 if not os.path.exists(folder_path):
     st.error(f"Library folder not found at {folder_path}. Please ensure it exists next to app.py with the CSV files.")
@@ -21,8 +35,11 @@ else:
         except Exception as e:
             st.error(f"Error reading {file}: {str(e)}")
 
-    # Display selected library data
-    if selected_library in dataframes:
+    # Sidebar filter for libraries (dynamically updated)
+    available_libraries = list(dataframes.keys())
+    if available_libraries:
+        selected_library = st.sidebar.selectbox("Select Library", available_libraries)
+        # Display selected library data
         df = dataframes[selected_library]
         col1, col2 = st.columns(2)
         with col1:
@@ -31,5 +48,5 @@ else:
         with col2:
             st.write("Second Half")
             st.dataframe(df.iloc[len(df)//2:])
-    elif selected_library:
-        st.error(f"No data found for {selected_library}. Please check the CSV file.")
+    else:
+        st.error("No CSV files found in the Library folder.")
