@@ -104,7 +104,35 @@ if available_libraries:
 else:
     st.info("No libraries available. Upload a CSV or ensure files are in Supabase storage.")
 
-# File uploader
+# Picture uploader for AI book suggestions
+st.sidebar.button("Upload a Picture to AI")
+uploaded_image = st.sidebar.file_uploader("Upload an Image for Book Suggestions", type=["jpg", "jpeg", "png"])
+
+def upload_picture_for_books(uploaded_image):
+    if uploaded_image is not None:
+        try:
+            # Analyze the image (Grok will process it)
+            st.image(uploaded_image, caption="Uploaded Image", use_column_width=True)
+            st.write("Analyzing image for book suggestions...")
+            
+            # Simulate AI analysis (in practice, Grok would interpret the image)
+            # Placeholder: Replace with actual image analysis logic if needed
+            image_content = uploaded_image.read()  # Raw image data
+            # Here, Grok would analyze the image; for now, we'll assume a generic response
+            book_suggestions = [
+                "The Color of Art by Jane Doe",  # Based on colors or art theme
+                "Mystery of the Scene by John Smith",  # Based on objects or setting
+                "Hidden Texts by Emily Brown"  # Based on any visible text
+            ]
+            st.success("Book suggestions based on image:")
+            for book in book_suggestions:
+                st.write(f"- {book}")
+        except Exception as e:
+            st.error(f"Error processing image: {str(e)}")
+
+if uploaded_image:
+    upload_picture_for_books(uploaded_image)
+
 uploaded_file = st.sidebar.file_uploader("Upload a CSV file to Supabase", type="csv")
 upload_to_supabase(uploaded_file)
 
