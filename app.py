@@ -110,7 +110,7 @@ else:
     st.info("No libraries available. Upload a CSV or ensure files are in Supabase storage.")
 
 # Instructions
-with st.expander("Setup Instructions"):
+with st.sidebar.expander("Setup Instructions"):
     st.markdown("""
     1. Install supabase-py: Add `supabase` to your `requirements.txt`.
     2. Create a Supabase project and a storage bucket named 'libraries'.
