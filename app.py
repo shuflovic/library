@@ -105,8 +105,7 @@ else:
     st.info("No libraries available. Upload a CSV or ensure files are in Supabase storage.")
 
 # Picture uploader for AI book suggestions
-st.sidebar.button("Upload a Picture to AI")
-uploaded_image = st.sidebar.file_uploader("Upload an Image for Book Suggestions", type=["jpg", "jpeg", "png"])
+uploaded_image = st.sidebar.file_uploader("Upload a Picture to AI", type=["jpg", "jpeg", "png"])
 
 def upload_picture_for_books(uploaded_image):
     if uploaded_image is not None:
