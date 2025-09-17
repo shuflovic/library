@@ -94,13 +94,18 @@ if available_libraries:
     selected_library = st.sidebar.selectbox("Select Library", available_libraries)
     df = st.session_state.libraries[selected_library]
     
-    col1, col2 = st.columns(2)
+    # Three-column display with library name as subheader
+    col1, col2, col3 = st.columns(3)
+    total_rows = len(df)
     with col1:
-        st.subheader("First Half")
-        st.dataframe(df.iloc[:len(df)//2])
+        st.subheader(selected_library)
+        st.dataframe(df.iloc[:total_rows//3])
     with col2:
-        st.subheader("Second Half")
-        st.dataframe(df.iloc[len(df)//2:])
+        st.subheader(selected_library)
+        st.dataframe(df.iloc[total_rows//3:2*total_rows//3])
+    with col3:
+        st.subheader(selected_library)
+        st.dataframe(df.iloc[2*total_rows//3:])
 else:
     st.info("No libraries available. Upload a CSV or ensure files are in Supabase storage.")
 
