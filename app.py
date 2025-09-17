@@ -81,7 +81,7 @@ if st.button("Refresh Libraries from Supabase"):
     st.rerun()
 
 # File uploader
-uploaded_file = st.file_uploader("Upload a CSV file to Supabase", type="csv")
+uploaded_file = st.sidebar.file_uploader("Upload a CSV file to Supabase", type="csv")
 upload_to_supabase(uploaded_file)
 
 # Load from Supabase if no libraries
