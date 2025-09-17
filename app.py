@@ -22,6 +22,12 @@ if 'libraries' not in st.session_state:
 if 'approved' not in st.session_state:
     st.session_state.approved = False
 
+# Keys for resetting uploaders
+if "csv_uploader_key" not in st.session_state:
+    st.session_state.csv_uploader_key = 0
+if "image_uploader_key" not in st.session_state:
+    st.session_state.image_uploader_key = 0
+
 # Function to load libraries from Supabase storage
 @st.cache_data(ttl=300)  # Cache for 5 minutes
 def load_libraries_from_supabase():
@@ -71,7 +77,7 @@ def upload_to_supabase(uploaded_file):
             st.cache_data.clear()
 
             # Reset uploader
-            st.session_state.csv_uploader = None
+            st.session_state.csv_uploader_key += 1
             st.rerun()
         except pd.errors.EmptyDataError:
             st.error(f"No columns to parse from file '{file_name}'. Ensure it has headers like 'Author,Title,Publication Year'.")
@@ -87,8 +93,8 @@ def upload_picture_for_books():
             st.image(st.session_state.uploaded_image, caption="Uploaded Image", use_column_width=True)
             st.write("Analyzing image for book recognition...")
 
-            # Read the image
-            image_bytes = st.session_state.uploaded_image.read()
+            # Read the image (simulated)
+            _ = st.session_state.uploaded_image.read()
 
             # Simulate AI analysis
             st.write("Simulating AI book recognition...")
@@ -131,7 +137,7 @@ if st.button("Refresh Libraries from Supabase"):
 uploaded_file = st.sidebar.file_uploader(
     "Upload a CSV file to Supabase",
     type="csv",
-    key="csv_uploader"
+    key=f"csv_uploader_{st.session_state.csv_uploader_key}"
 )
 upload_to_supabase(uploaded_file)
 
@@ -139,7 +145,7 @@ upload_to_supabase(uploaded_file)
 uploaded_image = st.sidebar.file_uploader(
     "Upload an Image for Book Recognition",
     type=["jpg", "jpeg", "png"],
-    key="image_uploader"
+    key=f"image_uploader_{st.session_state.image_uploader_key}"
 )
 if uploaded_image and 'uploaded_image' not in st.session_state:
     st.session_state.uploaded_image = uploaded_image
@@ -153,8 +159,8 @@ if 'selected_library' in st.session_state and st.button("Approved"):
     st.session_state.approved = True
     st.write("Image cleared")
 
-    # Reset uploader
-    st.session_state.image_uploader = None
+    # Force new uploader key
+    st.session_state.image_uploader_key += 1
     st.rerun()
 
 # Load from Supabase if no libraries
