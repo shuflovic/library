@@ -79,10 +79,6 @@ if st.button("Refresh Libraries from Supabase"):
     st.session_state.libraries = load_libraries_from_supabase()
     st.rerun()
 
-# File uploader
-uploaded_file = st.sidebar.file_uploader("Upload a CSV file to Supabase", type="csv")
-upload_to_supabase(uploaded_file)
-
 # Load from Supabase if no libraries
 if not st.session_state.libraries:
     st.session_state.libraries = load_libraries_from_supabase()
@@ -107,6 +103,10 @@ if available_libraries:
         st.dataframe(df.iloc[2*total_rows//3:])
 else:
     st.info("No libraries available. Upload a CSV or ensure files are in Supabase storage.")
+
+# File uploader
+uploaded_file = st.sidebar.file_uploader("Upload a CSV file to Supabase", type="csv")
+upload_to_supabase(uploaded_file)
 
 # Instructions
 with st.sidebar.expander("Setup Instructions"):
