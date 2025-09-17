@@ -93,7 +93,7 @@ else:
 
 
 # Manual input for Supabase credentials
-st.sidebar.title("Universal Library Manager - Manual Setup")
+st.sidebar.title("database Setup")
 supabase_url = st.sidebar.text_input("Enter Supabase URL", "https://rigsljqkzlnemypqjlbk.supabase.co")
 supabase_key = st.sidebar.text_input("Enter Supabase Key", "", type="password")
 
