@@ -1,3 +1,4 @@
+
 import streamlit as st
 import pandas as pd
 from supabase import create_client, Client
@@ -27,11 +28,11 @@ def load_libraries_from_supabase():
     libraries = {}
     try:
         response = supabase.storage.from_(BUCKET_NAME).list()
-        files = response.data if response.data else []
+        files = response if isinstance(response, list) else (response.data if hasattr(response, 'data') else [])
         
         for file_info in files:
-            file_name = file_info['name']
-            if file_name.endswith('.csv'):
+            file_name = file_info.get('name')
+            if file_name and file_name.endswith('.csv'):
                 library_name = file_name.replace('.csv', '')
                 file_data = supabase.storage.from_(BUCKET_NAME).download(file_name)
                 df = pd.read_csv(BytesIO(file_data))
@@ -48,8 +49,10 @@ def upload_to_supabase(uploaded_file):
             file_name = uploaded_file.name
             library_name = file_name.replace('.csv', '')
             
-            existing_files = supabase.storage.from_(BUCKET_NAME).list()
-            existing_names = [f['name'].replace('.csv', '') for f in existing_files.data if f['name'].endswith('.csv')]
+            # Check existing files with robust response handling
+            response = supabase.storage.from_(BUCKET_NAME).list()
+            existing_files = response if isinstance(response, list) else (response.data if hasattr(response, 'data') else [])
+            existing_names = [f.get('name', '').replace('.csv', '') for f in existing_files if f.get('name', '').endswith('.csv')]
             if library_name in existing_names:
                 st.warning(f"Library '{library_name}' already exists. Overwriting...")
             
