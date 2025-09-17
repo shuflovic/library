@@ -3,21 +3,6 @@ import pandas as pd
 from supabase import create_client, Client
 from io import BytesIO
 
-
-
-if not supabase_url or not supabase_key:
-    st.error("Please enter both Supabase URL and Key to proceed.")
-    st.stop()
-
-# Initialize Supabase client
-supabase: Client = create_client(supabase_url, supabase_key)
-
-BUCKET_NAME = "libraries"  # Change this to your Supabase storage bucket name
-
-# Initialize session state
-if 'libraries' not in st.session_state:
-    st.session_state.libraries = {}
-
 # Function to load libraries from Supabase storage
 @st.cache_data(ttl=300)  # Cache for 5 minutes
 def load_libraries_from_supabase():
@@ -110,6 +95,21 @@ else:
 st.sidebar.title("Universal Library Manager - Manual Setup")
 supabase_url = st.sidebar.text_input("Enter Supabase URL", "https://rigsljqkzlnemypqjlbk.supabase.co")
 supabase_key = st.sidebar.text_input("Enter Supabase Key", "", type="password")
+
+
+
+if not supabase_url or not supabase_key:
+    st.error("Please enter both Supabase URL and Key to proceed.")
+    st.stop()
+
+# Initialize Supabase client
+supabase: Client = create_client(supabase_url, supabase_key)
+
+BUCKET_NAME = "libraries"  # Change this to your Supabase storage bucket name
+
+# Initialize session state
+if 'libraries' not in st.session_state:
+    st.session_state.libraries = {}
 
 # Instructions
 with st.expander("Setup Instructions"):
