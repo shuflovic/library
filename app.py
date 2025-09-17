@@ -6,7 +6,7 @@ import os
 selected_library = st.sidebar.selectbox("Select Library", ["library 1", "library 2"])
 
 # Read all CSV files in the Library folder
-folder_path = "Library"
+folder_path = "./Library"
 csv_files = [f for f in os.listdir(folder_path) if f.endswith('.csv')]
 dataframes = {}
 
