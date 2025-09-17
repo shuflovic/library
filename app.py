@@ -3,6 +3,23 @@ import pandas as pd
 from supabase import create_client, Client
 from io import BytesIO
 
+# Manual input for Supabase credentials
+st.sidebar.title("database Setup")
+supabase_url = st.sidebar.text_input("Enter Supabase URL", "https://rigsljqkzlnemypqjlbk.supabase.co")
+supabase_key = st.sidebar.text_input("Enter Supabase Key", "", type="password")
+
+if not supabase_url or not supabase_key:
+    st.error("Please enter both Supabase URL and Key to proceed.")
+    st.stop()
+
+# Initialize Supabase client
+supabase: Client = create_client(supabase_url, supabase_key)
+BUCKET_NAME = "libraries"  # Change this to your Supabase storage bucket name
+
+# Initialize session state
+if 'libraries' not in st.session_state:
+    st.session_state.libraries = {}
+
 # Function to load libraries from Supabase storage
 @st.cache_data(ttl=300)  # Cache for 5 minutes
 def load_libraries_from_supabase():
@@ -10,7 +27,7 @@ def load_libraries_from_supabase():
     try:
         response = supabase.storage.from_(BUCKET_NAME).list()
         files = response if isinstance(response, list) else (response.data if hasattr(response, 'data') else [])
-        
+       
         for file_info in files:
             file_name = file_info.get('name')
             if file_name and file_name.endswith('.csv'):
@@ -29,19 +46,19 @@ def upload_to_supabase(uploaded_file):
         try:
             file_name = uploaded_file.name
             library_name = file_name.replace('.csv', '')
-            
+           
             # Check existing files with robust response handling
             response = supabase.storage.from_(BUCKET_NAME).list()
             existing_files = response if isinstance(response, list) else (response.data if hasattr(response, 'data') else [])
             existing_names = [f.get('name', '').replace('.csv', '') for f in existing_files if f.get('name', '').endswith('.csv')]
             if library_name in existing_names:
                 st.warning(f"Library '{library_name}' already exists. Overwriting...")
-            
+           
             # Upload the file
             file_content = uploaded_file.read()
             supabase.storage.from_(BUCKET_NAME).upload(file_name, file_content)
             st.success(f"Uploaded '{library_name}' to Supabase storage!")
-            
+           
             # Read into DataFrame with a fresh buffer
             file_buffer = BytesIO(file_content)
             df = pd.read_csv(file_buffer)
@@ -75,7 +92,7 @@ available_libraries = list(st.session_state.libraries.keys())
 if available_libraries:
     selected_library = st.sidebar.radio("Select Library", available_libraries)
     df = st.session_state.libraries[selected_library]
-    
+   
     # Three-column display with library name as subheader
     col1, col2, col3 = st.columns(3)
     total_rows = len(df)
@@ -90,26 +107,6 @@ if available_libraries:
         st.dataframe(df.iloc[2*total_rows//3:])
 else:
     st.info("No libraries available. Upload a CSV or ensure files are in Supabase storage.")
-
-
-# Manual input for Supabase credentials
-st.sidebar.title("database Setup")
-supabase_url = st.sidebar.text_input("Enter Supabase URL", "https://rigsljqkzlnemypqjlbk.supabase.co")
-supabase_key = st.sidebar.text_input("Enter Supabase Key", "", type="password")
-
-if not supabase_url or not supabase_key:
-    st.error("Please enter both Supabase URL and Key to proceed.")
-    st.stop()
-
-# Initialize Supabase client
-supabase: Client = create_client(supabase_url, supabase_key)
-
-BUCKET_NAME = "libraries"  # Change this to your Supabase storage bucket name
-
-# Initialize session state
-if 'libraries' not in st.session_state:
-    st.session_state.libraries = {}
-
 
 # Instructions
 with st.sidebar.expander("Setup Instructions"):
