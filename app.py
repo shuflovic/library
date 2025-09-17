@@ -153,7 +153,11 @@ if uploaded_image and 'uploaded_image' not in st.session_state:
 upload_picture_for_books()
 
 # Approved button to clear image
-if 'selected_library' in st.session_state and st.button("Approved"):
+if (
+    'selected_library' in st.session_state
+    and not st.session_state.approved  # 👈 only show button if not approved yet
+    and st.button("Approved")
+):
     if 'uploaded_image' in st.session_state:
         del st.session_state['uploaded_image']
     st.session_state.approved = True
@@ -162,6 +166,7 @@ if 'selected_library' in st.session_state and st.button("Approved"):
     # Force new uploader key
     st.session_state.image_uploader_key += 1
     st.rerun()
+
 
 # Load from Supabase if no libraries
 if not st.session_state.libraries:
