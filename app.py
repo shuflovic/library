@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 from supabase import create_client, Client
 from io import BytesIO
-import base64
 
 # Manual input for Supabase credentials
 st.sidebar.title("database Setup")
@@ -118,34 +117,6 @@ def upload_picture_for_books(uploaded_image):
         except Exception as e:
             st.error(f"Error processing image: {str(e)}")
 
-if uploaded_image:
-    upload_picture_for_books(uploaded_image)
-
-# Approved button to clear image
-if 'selected_library' in st.session_state and st.button("Approved"):
-    if 'uploaded_image' in st.session_state:
-        del st.session_state['uploaded_image']
-    st.experimental_rerun()
-
-# Sidebar selection with radio buttons
-available_libraries = list(st.session_state.libraries.keys())
-if available_libraries:
-    selected_library = st.sidebar.radio("Select Library", available_libraries, index=available_libraries.index(st.session_state.get('selected_library', available_libraries[0]) if available_libraries else 0))
-    df = st.session_state.libraries[selected_library]
-   
-    # Three-column display with library name only in first column
-    col1, col2, col3 = st.columns(3)
-    total_rows = len(df)
-    with col1:
-        st.subheader(selected_library)
-        st.dataframe(df.iloc[:total_rows//3])
-    with col2:
-        st.dataframe(df.iloc[total_rows//3:2*total_rows//3])
-    with col3:
-        st.dataframe(df.iloc[2*total_rows//3:])
-else:
-    st.info("No libraries available. Upload a CSV or ensure files are in Supabase storage.")
-
 # Main app
 if st.button("Refresh Libraries from Supabase"):
     st.session_state.libraries = load_libraries_from_supabase()
@@ -159,14 +130,20 @@ upload_to_supabase(uploaded_file)
 uploaded_image = st.sidebar.file_uploader("Upload an Image for Book Recognition", type=["jpg", "jpeg", "png"])
 upload_picture_for_books(uploaded_image)
 
+# Approved button to clear image
+if 'selected_library' in st.session_state and st.button("Approved"):
+    if 'uploaded_image' in st.session_state:
+        del st.session_state['uploaded_image']
+    st.rerun()
+
 # Load from Supabase if no libraries
 if not st.session_state.libraries:
     st.session_state.libraries = load_libraries_from_supabase()
 
-# Sidebar selection
+# Sidebar selection with radio buttons
 available_libraries = list(st.session_state.libraries.keys())
 if available_libraries:
-    selected_library = st.sidebar.radio("Select Library", available_libraries)
+    selected_library = st.sidebar.radio("Select Library", available_libraries, index=available_libraries.index(st.session_state.get('selected_library', available_libraries[0]) if available_libraries else 0))
     df = st.session_state.libraries[selected_library]
    
     # Three-column display with library name only in first column
