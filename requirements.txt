@@ -1,3 +1,4 @@
 pandas
 supabase
 streamlit
+base64
