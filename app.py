@@ -4,7 +4,7 @@ from supabase import create_client, Client
 from io import BytesIO
 
 # Manual input for Supabase credentials
-st.sidebar.title("database Setup")
+st.sidebar.title("Database Setup")
 supabase_url = st.sidebar.text_input("Enter Supabase URL", "https://rigsljqkzlnemypqjlbk.supabase.co")
 supabase_key = st.sidebar.text_input("Enter Supabase Key", "", type="password")
 
@@ -49,7 +49,7 @@ def upload_to_supabase(uploaded_file):
             file_name = uploaded_file.name
             library_name = file_name.replace('.csv', '')
            
-            # Check existing files with robust response handling
+            # Check existing files
             response = supabase.storage.from_(BUCKET_NAME).list()
             existing_files = response if isinstance(response, list) else (response.data if hasattr(response, 'data') else [])
             existing_names = [f.get('name', '').replace('.csv', '') for f in existing_files if f.get('name', '').endswith('.csv')]
@@ -61,7 +61,7 @@ def upload_to_supabase(uploaded_file):
             supabase.storage.from_(BUCKET_NAME).upload(file_name, file_content)
             st.success(f"Uploaded '{library_name}' to Supabase storage!")
            
-            # Read into DataFrame with a fresh buffer
+            # Read into DataFrame
             file_buffer = BytesIO(file_content)
             df = pd.read_csv(file_buffer)
             if df.empty:
@@ -69,6 +69,9 @@ def upload_to_supabase(uploaded_file):
                 return None
             st.session_state.libraries[library_name] = df
             st.cache_data.clear()
+
+            # Reset uploader
+            st.session_state.csv_uploader = None
             st.rerun()
         except pd.errors.EmptyDataError:
             st.error(f"No columns to parse from file '{file_name}'. Ensure it has headers like 'Author,Title,Publication Year'.")
@@ -87,7 +90,7 @@ def upload_picture_for_books():
             # Read the image
             image_bytes = st.session_state.uploaded_image.read()
 
-            # Simulate AI analysis (Grok would process the image)
+            # Simulate AI analysis
             st.write("Simulating AI book recognition...")
             recognized_books = [
                 {"Author": "Kate Atkinson", "Title": "Shrines of Gaiety", "Publication Year": 2022},
@@ -98,8 +101,8 @@ def upload_picture_for_books():
             # Convert to DataFrame
             df = pd.DataFrame(recognized_books)
             
-            # Use image filename (without extension) as library name
-            library_name = st.session_state.uploaded_image.name.rsplit('.', 1)[0]  # Remove .jpg/.png
+            # Use image filename as library name
+            library_name = st.session_state.uploaded_image.name.rsplit('.', 1)[0]
             file_name = f"{library_name}.csv"
             
             # Upload to Supabase
@@ -107,12 +110,12 @@ def upload_picture_for_books():
             supabase.storage.from_(BUCKET_NAME).upload(file_name, csv_bytes)
             st.success(f"Uploaded recognized books '{library_name}' to Supabase storage!")
             
-            # Load into session state and select new library
+            # Load into session state
             st.session_state.libraries[library_name] = df
             st.cache_data.clear()
-            st.session_state.selected_library = library_name  # Set radio to new library
+            st.session_state.selected_library = library_name
             
-            # Display the recognized books
+            # Display recognized books
             st.subheader("Recognized Books from Image")
             st.dataframe(df)
             
@@ -125,22 +128,33 @@ if st.button("Refresh Libraries from Supabase"):
     st.rerun()
 
 # File uploader for CSV
-uploaded_file = st.sidebar.file_uploader("Upload a CSV file to Supabase", type="csv")
+uploaded_file = st.sidebar.file_uploader(
+    "Upload a CSV file to Supabase",
+    type="csv",
+    key="csv_uploader"
+)
 upload_to_supabase(uploaded_file)
 
 # Picture uploader for book recognition
-uploaded_image = st.sidebar.file_uploader("Upload an Image for Book Recognition", type=["jpg", "jpeg", "png"])
+uploaded_image = st.sidebar.file_uploader(
+    "Upload an Image for Book Recognition",
+    type=["jpg", "jpeg", "png"],
+    key="image_uploader"
+)
 if uploaded_image and 'uploaded_image' not in st.session_state:
     st.session_state.uploaded_image = uploaded_image
-    st.session_state.approved = False  # Reset approval on new upload
+    st.session_state.approved = False
 upload_picture_for_books()
 
 # Approved button to clear image
 if 'selected_library' in st.session_state and st.button("Approved"):
     if 'uploaded_image' in st.session_state:
         del st.session_state['uploaded_image']
-    st.session_state.approved = True  # Set approval flag
+    st.session_state.approved = True
     st.write("Image cleared")
+
+    # Reset uploader
+    st.session_state.image_uploader = None
     st.rerun()
 
 # Load from Supabase if no libraries
@@ -150,10 +164,16 @@ if not st.session_state.libraries:
 # Sidebar selection with radio buttons
 available_libraries = list(st.session_state.libraries.keys())
 if available_libraries:
-    selected_library = st.sidebar.radio("Select Library", available_libraries, index=available_libraries.index(st.session_state.get('selected_library', available_libraries[0]) if available_libraries else 0))
+    selected_library = st.sidebar.radio(
+        "Select Library",
+        available_libraries,
+        index=available_libraries.index(
+            st.session_state.get('selected_library', available_libraries[0]) if available_libraries else 0
+        )
+    )
     df = st.session_state.libraries[selected_library]
    
-    # Three-column display with library name only in first column
+    # Three-column display
     col1, col2, col3 = st.columns(3)
     total_rows = len(df)
     with col1:
