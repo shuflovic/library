@@ -1,4 +1,3 @@
-
 import streamlit as st
 import pandas as pd
 from supabase import create_client, Client
@@ -56,11 +55,22 @@ def upload_to_supabase(uploaded_file):
             if library_name in existing_names:
                 st.warning(f"Library '{library_name}' already exists. Overwriting...")
             
-            supabase.storage.from_(BUCKET_NAME).upload(file_name, uploaded_file.read())
+            # Upload the file
+            file_content = uploaded_file.read()
+            supabase.storage.from_(BUCKET_NAME).upload(file_name, file_content)
             st.success(f"Uploaded '{library_name}' to Supabase storage!")
-            st.session_state.libraries[library_name] = pd.read_csv(BytesIO(uploaded_file.read()))  # Load into session state
+            
+            # Read into DataFrame with a fresh buffer
+            file_buffer = BytesIO(file_content)
+            df = pd.read_csv(file_buffer)
+            if df.empty:
+                st.error(f"Uploaded file '{file_name}' is empty or has no valid data.")
+                return None
+            st.session_state.libraries[library_name] = df
             st.cache_data.clear()
             st.rerun()
+        except pd.errors.EmptyDataError:
+            st.error(f"No columns to parse from file '{file_name}'. Ensure it has headers like 'Author,Title,Publication Year'.")
         except Exception as e:
             st.error(f"Error uploading to Supabase: {str(e)}")
     return None
@@ -101,5 +111,5 @@ with st.expander("Setup Instructions"):
     2. Create a Supabase project and a storage bucket named 'libraries'.
     3. Set policies: Allow public read (or authenticated), and insert/update for your key.
     4. Enter your Supabase URL and Key manually above.
-    5. Upload a CSV to start, or ensure files exist in the Supabase bucket.
+    5. Upload a CSV with headers 'Author,Title,Publication Year' to start, or ensure files exist in the Supabase bucket.
     """)
