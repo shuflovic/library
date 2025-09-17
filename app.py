@@ -75,15 +75,15 @@ def upload_to_supabase(uploaded_file):
     return None
 
 # Function to analyze image and generate book list CSV
-def upload_picture_for_books(uploaded_image):
-    if uploaded_image is not None:
+def upload_picture_for_books():
+    if 'uploaded_image' in st.session_state and st.session_state.uploaded_image is not None:
         try:
             # Display the uploaded image
-            st.image(uploaded_image, caption="Uploaded Image", use_column_width=True)
+            st.image(st.session_state.uploaded_image, caption="Uploaded Image", use_column_width=True)
             st.write("Analyzing image for book recognition...")
 
             # Read the image
-            image_bytes = uploaded_image.read()
+            image_bytes = st.session_state.uploaded_image.read()
 
             # Simulate AI analysis (Grok would process the image)
             st.write("Simulating AI book recognition...")
@@ -97,7 +97,7 @@ def upload_picture_for_books(uploaded_image):
             df = pd.DataFrame(recognized_books)
             
             # Use image filename (without extension) as library name
-            library_name = uploaded_image.name.rsplit('.', 1)[0]  # Remove .jpg/.png
+            library_name = st.session_state.uploaded_image.name.rsplit('.', 1)[0]  # Remove .jpg/.png
             file_name = f"{library_name}.csv"
             
             # Upload to Supabase
@@ -128,7 +128,9 @@ upload_to_supabase(uploaded_file)
 
 # Picture uploader for book recognition
 uploaded_image = st.sidebar.file_uploader("Upload an Image for Book Recognition", type=["jpg", "jpeg", "png"])
-upload_picture_for_books(uploaded_image)
+if uploaded_image and 'uploaded_image' not in st.session_state:
+    st.session_state.uploaded_image = uploaded_image
+upload_picture_for_books()
 
 # Approved button to clear image
 if 'selected_library' in st.session_state and st.button("Approved"):
