@@ -92,7 +92,7 @@ else:
     st.info("No libraries available. Upload a CSV or ensure files are in Supabase storage.")
 
 # Manual input for Supabase credentials
-st.sidebar.title("database set up")
+st.sidebar("database setup")
 supabase_url = st.sidebar.text_input("Enter Supabase URL", "https://rigsljqkzlnemypqjlbk.supabase.co")
 supabase_key = st.sidebar.text_input("Enter Supabase Key", "", type="password")
 
