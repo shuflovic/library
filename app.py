@@ -3,24 +3,6 @@ import pandas as pd
 from supabase import create_client, Client
 from io import BytesIO
 
-# Manual input for Supabase credentials
-st.sidebar.title("Universal Library Manager - Manual Setup")
-supabase_url = st.sidebar.text_input("Enter Supabase URL", "https://rigsljqkzlnemypqjlbk.supabase.co")
-supabase_key = st.sidebar.text_input("Enter Supabase Key", "", type="password")
-
-if not supabase_url or not supabase_key:
-    st.error("Please enter both Supabase URL and Key to proceed.")
-    st.stop()
-
-# Initialize Supabase client
-supabase: Client = create_client(supabase_url, supabase_key)
-
-BUCKET_NAME = "libraries"  # Change this to your Supabase storage bucket name
-
-# Initialize session state
-if 'libraries' not in st.session_state:
-    st.session_state.libraries = {}
-
 # Function to load libraries from Supabase storage
 @st.cache_data(ttl=300)  # Cache for 5 minutes
 def load_libraries_from_supabase():
@@ -91,7 +73,7 @@ if not st.session_state.libraries:
 # Sidebar selection
 available_libraries = list(st.session_state.libraries.keys())
 if available_libraries:
-    selected_library = st.sidebar.selectbox("Select Library", available_libraries)
+    selected_library = st.sidebar.radio("Select Library", available_libraries)
     df = st.session_state.libraries[selected_library]
     
     # Three-column display with library name as subheader
@@ -109,8 +91,28 @@ if available_libraries:
 else:
     st.info("No libraries available. Upload a CSV or ensure files are in Supabase storage.")
 
+
+# Manual input for Supabase credentials
+st.sidebar.title("Universal Library Manager - Manual Setup")
+supabase_url = st.sidebar.text_input("Enter Supabase URL", "https://rigsljqkzlnemypqjlbk.supabase.co")
+supabase_key = st.sidebar.text_input("Enter Supabase Key", "", type="password")
+
+if not supabase_url or not supabase_key:
+    st.error("Please enter both Supabase URL and Key to proceed.")
+    st.stop()
+
+# Initialize Supabase client
+supabase: Client = create_client(supabase_url, supabase_key)
+
+BUCKET_NAME = "libraries"  # Change this to your Supabase storage bucket name
+
+# Initialize session state
+if 'libraries' not in st.session_state:
+    st.session_state.libraries = {}
+
+
 # Instructions
-with st.expander("Setup Instructions"):
+with st.sidebar.expander("Setup Instructions"):
     st.markdown("""
     1. Install supabase-py: Add `supabase` to your `requirements.txt`.
     2. Create a Supabase project and a storage bucket named 'libraries'.
