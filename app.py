@@ -91,7 +91,7 @@ if not st.session_state.libraries:
 # Sidebar selection
 available_libraries = list(st.session_state.libraries.keys())
 if available_libraries:
-    selected_library = st.sidebar.selectbox("Select Library", available_libraries)
+    selected_library = st.sidebar.radio("Select Library", available_libraries)
     df = st.session_state.libraries[selected_library]
     
     # Three-column display with library name as subheader
