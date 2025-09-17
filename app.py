@@ -136,6 +136,7 @@ upload_picture_for_books()
 if 'selected_library' in st.session_state and st.button("Approved"):
     if 'uploaded_image' in st.session_state:
         del st.session_state['uploaded_image']
+        st.write("Image cleared")
     st.rerun()
 
 # Load from Supabase if no libraries
