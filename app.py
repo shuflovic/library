@@ -188,11 +188,13 @@ if available_libraries:
     col1, col2, col3 = st.columns(3)
     total_rows = len(df)
     with col1:
-        st.subheader(selected_library)
+        st.subheader(selected_library + "  (1/3)")
         st.dataframe(df.iloc[:total_rows//3])
     with col2:
+        st.subheader("(2/3)")
         st.dataframe(df.iloc[total_rows//3:2*total_rows//3])
     with col3:
+        st.subheader("(3/3)")
         st.dataframe(df.iloc[2*total_rows//3:])
 else:
     st.info("No libraries available. Upload a CSV or ensure files are in Supabase storage.")
