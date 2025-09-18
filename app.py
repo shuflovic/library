@@ -88,7 +88,7 @@ def upload_to_supabase(uploaded_file):
     return None
 
 
-def extract_text_from_image(image_file, api_key):
+def extract_text_from_image(image_file, api_key, filename="uploaded.jpg"):
     """Send image to OCR API and return extracted text."""
     url = "https://api.ocr.space/parse/image"
     payload = {
@@ -96,12 +96,16 @@ def extract_text_from_image(image_file, api_key):
         "language": "eng",
         "isTable": True,
     }
-    files = {"file": image_file}
+    # Pass tuple: (filename, file_object, mime_type)
+    files = {
+        "file": (filename, image_file, "image/jpeg")
+    }
     response = requests.post(url, data=payload, files=files)
     result = response.json()
     if result.get("IsErroredOnProcessing"):
         raise Exception(result.get("ErrorMessage", "Unknown OCR error"))
     return result["ParsedResults"][0]["ParsedText"]
+
 
 
 def upload_picture_for_books():
@@ -116,7 +120,13 @@ def upload_picture_for_books():
 
             st.write("Analyzing image with OCR API...")
             image_bytes = st.session_state.uploaded_image.getvalue()
-            extracted_text = extract_text_from_image(BytesIO(image_bytes), OCR_API_KEY)
+extracted_text = extract_text_from_image(
+    BytesIO(image_bytes),
+    OCR_API_KEY,
+    filename=st.session_state.uploaded_image.name  # 👈 pass original filename
+)
+
+            
 
             st.text_area("Raw OCR Output", extracted_text, height=200)
 
