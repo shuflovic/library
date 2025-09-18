@@ -110,8 +110,13 @@ def extract_text_from_image(image_file, api_key, filename="uploaded.jpg"):
 
 def upload_picture_for_books():
     """Upload an image, run OCR, and create a CSV library."""
-    if 'uploaded_image' in st.session_state and st.session_state.uploaded_image is not None and not st.session_state.approved:
+    if (
+        'uploaded_image' in st.session_state
+        and st.session_state.uploaded_image is not None
+        and not st.session_state.approved
+    ):
         try:
+            # Show uploaded image
             st.image(st.session_state.uploaded_image, caption="Uploaded Image", use_column_width=True)
 
             if not OCR_API_KEY:
@@ -120,20 +125,24 @@ def upload_picture_for_books():
 
             st.write("Analyzing image with OCR API...")
             image_bytes = st.session_state.uploaded_image.getvalue()
-extracted_text = extract_text_from_image(
-    BytesIO(image_bytes),
-    OCR_API_KEY,
-    filename=st.session_state.uploaded_image.name  # 👈 pass original filename
-)
 
-            
+            # ✅ Call OCR with original filename
+            extracted_text = extract_text_from_image(
+                BytesIO(image_bytes),
+                OCR_API_KEY,
+                filename=st.session_state.uploaded_image.name
+            )
 
+            # Show raw OCR text
             st.text_area("Raw OCR Output", extracted_text, height=200)
 
             # --- Basic parsing example ---
-            # Right now, just make one dummy entry from OCR text.
-            # You can replace this with regex/LLM parsing for real structure.
-            recognized_books = [{"Author": "Unknown", "Title": extracted_text[:50], "Publication Year": ""}]
+            # For now, just create a dummy book entry from OCR output
+            recognized_books = [{
+                "Author": "Unknown",
+                "Title": extracted_text[:50],  # first 50 chars
+                "Publication Year": ""
+            }]
 
             # Convert to DataFrame
             df = pd.DataFrame(recognized_books)
@@ -147,7 +156,7 @@ extracted_text = extract_text_from_image(
             supabase.storage.from_(BUCKET_NAME).upload(file_name, csv_bytes)
             st.success(f"Uploaded recognized books '{library_name}' to Supabase storage!")
 
-            # Load into session state
+            # Store in session
             st.session_state.libraries[library_name] = df
             st.cache_data.clear()
             st.session_state.selected_library = library_name
@@ -158,6 +167,7 @@ extracted_text = extract_text_from_image(
 
         except Exception as e:
             st.error(f"Error processing image: {str(e)}")
+
 
 
 # --- Main App ---
