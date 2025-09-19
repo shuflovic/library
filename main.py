@@ -108,21 +108,21 @@ def process_uploaded_image():
 
 
 # Save to Supabase as TXT
-                txt_name = st.session_state.uploaded_image.name.rsplit(".", 1)[0] + ".txt"
-                supabase.storage.from_(BUCKET_NAME).upload(txt_name, text.encode("utf-8"))
-                st.success(f"Uploaded OCR result as '{txt_name}' to Supabase.")
+            txt_name = st.session_state.uploaded_image.name.rsplit(".", 1)[0] + ".txt"
+            supabase.storage.from_(BUCKET_NAME).upload(txt_name, text.encode("utf-8"))
+            st.success(f"Uploaded OCR result as '{txt_name}' to Supabase.")
 
 # Refresh files and select new TXT
-                st.cache_data.clear()
-                st.session_state.files = load_files_from_supabase()
-                st.session_state.selected_file = txt_name
+            st.cache_data.clear()
+            st.session_state.files = load_files_from_supabase()
+            st.session_state.selected_file = txt_name
 
 # Clear image after processing
-                del st.session_state["uploaded_image"]
-                st.session_state.image_uploader_key += 1
+            del st.session_state["uploaded_image"]
+            st.session_state.image_uploader_key += 1
 
-                st.subheader("OCR Extracted Text")
-                st.text_area("Text Result", text, height=300)
+            st.subheader("OCR Extracted Text")
+            st.text_area("Text Result", text, height=300)
 
 
         except Exception as e:
