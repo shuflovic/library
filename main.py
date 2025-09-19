@@ -158,6 +158,7 @@ if not st.session_state.files:
 # --- File Viewer ---
 # Include only TXT and CSV files
 # --- File Viewer ---
+# --- File Viewer ---
 available_files = list(st.session_state.files.keys())
 if not available_files:
     st.info("No files found in Supabase storage.")
@@ -179,11 +180,11 @@ else:
     if isinstance(data, pd.DataFrame):  # CSV
         st.subheader(f"CSV Preview: {selected}")
         st.dataframe(data)
-    else:  # TXT
+    elif selected:  # TXT
         st.subheader(f"Text File: {selected}")
         st.text_area("Content", data, height=400)
-else:
-    st.info("No files found in Supabase storage.")
+    else:
+        st.info("No valid file content to display.")
 
 # --- Help ---
 with st.sidebar.expander("Setup Instructions"):
