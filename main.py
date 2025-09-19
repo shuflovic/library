@@ -85,19 +85,15 @@ def process_uploaded_image():
     if "uploaded_image" in st.session_state and st.session_state.uploaded_image:
         try:
             st.image(st.session_state.uploaded_image, caption="Uploaded Image", use_column_width=True)
-
             if not OCR_API_KEY:
                 st.warning("Provide OCR API Key first.")
                 return
-
             # Show Approved button before running OCR
             if not st.session_state.approved:
                 if st.button("Approved"):
                     st.session_state.approved = True
-                    # continue execution after approval
                 else:
-                    return  # stop until user clicks Approved
-
+                    return  # Stop until user clicks Approved
             # --- OCR runs only after approval ---
             st.write("Analyzing image with OCR...")
             text = extract_text_from_image(
@@ -105,30 +101,23 @@ def process_uploaded_image():
                 OCR_API_KEY,
                 filename=st.session_state.uploaded_image.name,
             )
-
-
-# Save to Supabase as TXT
+            # Save to Supabase as TXT
             txt_name = st.session_state.uploaded_image.name.rsplit(".", 1)[0] + ".txt"
             supabase.storage.from_(BUCKET_NAME).upload(txt_name, text.encode("utf-8"))
             st.success(f"Uploaded OCR result as '{txt_name}' to Supabase.")
-
-# Refresh files and select new TXT
+            # Refresh files and select new TXT
             st.cache_data.clear()
             st.session_state.files = load_files_from_supabase()
-            st.session_state.selected_file = txt_name
-
-# Clear image after processing
+            st.session_state.selected_file = txt_name  # Set the new TXT as selected
+            st.session_state.approved = False  # Reset approval state
+            # Clear image after processing
             del st.session_state["uploaded_image"]
             st.session_state.image_uploader_key += 1
-
             st.subheader("OCR Extracted Text")
             st.text_area("Text Result", text, height=300)
-
-
+            st.rerun()  # Force rerun to update file selector
         except Exception as e:
             st.error(f"Error during OCR: {e}")
-
-
 # --- Main UI ---
 if st.button("Refresh Files from Supabase"):
     st.session_state.files = load_files_from_supabase()
@@ -159,32 +148,43 @@ if not st.session_state.files:
 # Include only TXT and CSV files
 # --- File Viewer ---
 # --- File Viewer ---
+# --- File Viewer ---
 available_files = list(st.session_state.files.keys())
 if not available_files:
     st.info("No files found in Supabase storage.")
 else:
+    # Debugging: Show available files
+    st.sidebar.write(f"Available files: {available_files}")
+    
     # Determine default selected index safely
     default_file = st.session_state.get("selected_file")
     default_index = available_files.index(default_file) if default_file in available_files else 0
-    st.session_state.selected_file = available_files[default_index]
-
-    # Build radio menu
+    
+    # Build radio menu with unique key to force refresh
     selected = st.sidebar.radio(
         "Select File",
         available_files,
         index=default_index,
+        key=f"file_selector_{len(available_files)}",  # Unique key to avoid caching issues
     )
-    st.session_state.selected_file = selected
-    data = st.session_state.files[selected]
-
-    if isinstance(data, pd.DataFrame):  # CSV
+    
+    # Update selected file in session state
+    if st.session_state.selected_file != selected:
+        st.session_state.selected_file = selected
+        st.rerun()  # Force rerun to update display
+    
+    # Get data for selected file
+    data = st.session_state.files.get(selected)
+    if not data:
+        st.error(f"No data found for file: {selected}")
+    elif isinstance(data, pd.DataFrame):  # CSV
         st.subheader(f"CSV Preview: {selected}")
         st.dataframe(data)
-    elif selected:  # TXT
+    else:  # TXT
         st.subheader(f"Text File: {selected}")
         st.text_area("Content", data, height=400)
-    else:
-        st.info("No valid file content to display.")
+  #  else:
+      #  st.info("No valid file content to display.")
 
 # --- Help ---
 with st.sidebar.expander("Setup Instructions"):
