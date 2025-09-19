@@ -157,30 +157,29 @@ if not st.session_state.files:
 
 # --- File Viewer ---
 # Include only TXT and CSV files
+# --- File Viewer ---
 available_files = list(st.session_state.files.keys())
-
-# Determine default selected index safely
-default_file = st.session_state.get("selected_file")
-if default_file in available_files:
-    default_index = available_files.index(default_file)
+if not available_files:
+    st.info("No files found in Supabase storage.")
 else:
-    default_index = 0
-    st.session_state.selected_file = available_files[0] if available_files else None
+    # Determine default selected index safely
+    default_file = st.session_state.get("selected_file")
+    default_index = available_files.index(default_file) if default_file in available_files else 0
+    st.session_state.selected_file = available_files[default_index]
 
-# Build radio menu
-selected = st.sidebar.radio(
-    "Select File",
-    available_files,
-    index=default_index,
-)
-st.session_state.selected_file = selected
+    # Build radio menu
+    selected = st.sidebar.radio(
+        "Select File",
+        available_files,
+        index=default_index,
+    )
+    st.session_state.selected_file = selected
+    data = st.session_state.files[selected]
 
-data = st.session_state.files[selected]
-
-if isinstance(data, pd.DataFrame):  # CSV
+    if isinstance(data, pd.DataFrame):  # CSV
         st.subheader(f"CSV Preview: {selected}")
         st.dataframe(data)
-else if:  # TXT
+    else:  # TXT
         st.subheader(f"Text File: {selected}")
         st.text_area("Content", data, height=400)
 else:
