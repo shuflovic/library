@@ -175,7 +175,7 @@ selected = st.sidebar.radio(
 )
 st.session_state.selected_file = selected
 
-    data = st.session_state.files[selected]
+data = st.session_state.files[selected]
 
     if isinstance(data, pd.DataFrame):  # CSV
         st.subheader(f"CSV Preview: {selected}")
