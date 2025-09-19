@@ -78,7 +78,7 @@ def extract_text_from_image(image_file, api_key, filename="uploaded.jpg"):
     return result["ParsedResults"][0]["ParsedText"]
 
 def process_uploaded_image():
-    """Run OCR on image, save TXT to Supabase, and show text + approve option."""
+    """Run OCR on image, save TXT to Supabase, and show text."""
     if "uploaded_image" in st.session_state and st.session_state.uploaded_image and not st.session_state.approved:
         try:
             st.image(st.session_state.uploaded_image, caption="Uploaded Image", use_column_width=True)
@@ -104,13 +104,6 @@ def process_uploaded_image():
 
             st.subheader("OCR Extracted Text")
             st.text_area("Text Result", text, height=300)
-
-            # --- Approve button (only visible here) ---
-            if st.button("Approve"):
-                del st.session_state["uploaded_image"]
-                st.session_state.approved = True
-                st.session_state.image_uploader_key += 1
-                st.rerun()
 
         except Exception as e:
             st.error(f"Error during OCR: {e}")
@@ -138,6 +131,17 @@ if uploaded_image and "uploaded_image" not in st.session_state:
     st.session_state.approved = False
 process_uploaded_image()
 
+if (
+    "selected_file" in st.session_state
+    and not st.session_state.approved
+    and st.button("Approved")
+):
+    if "uploaded_image" in st.session_state:
+        del st.session_state["uploaded_image"]
+    st.session_state.approved = True
+    st.session_state.image_uploader_key += 1
+    st.rerun()
+
 if not st.session_state.files:
     st.session_state.files = load_files_from_supabase()
 
@@ -155,6 +159,8 @@ if available_files:
     if isinstance(data, pd.DataFrame):  # CSV
         st.subheader(f"CSV Preview: {selected}")
         st.dataframe(data)
+        st.subheader("As TXT (one column)")
+        #st.text("\n".join([", ".join(map(str, row)) for row in data.values]))
     else:  # TXT
         st.subheader(f"Text File: {selected}")
         st.text_area("Content", data, height=400)
@@ -168,7 +174,6 @@ with st.sidebar.expander("Setup Instructions"):
     2. Create Supabase project + storage bucket 'libraries'.
     3. Add storage policy for read/write.
     4. Enter Supabase URL, Key, and OCR API Key in sidebar.
-    5. Upload a CSV (shows in table).
+    5. Upload a CSV (will show as CSV and TXT).
     6. Upload an image (runs OCR, saves result as TXT).
-    7. Click Approve to clear image uploader.
     """)
