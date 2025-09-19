@@ -156,7 +156,12 @@ if not st.session_state.files:
     st.session_state.files = load_files_from_supabase()
 
 # --- File Viewer ---
-available_files = list(st.session_state.files.keys())
+# Include only TXT and CSV files
+available_files = [
+    name for name, data in st.session_state.files.items()
+    if isinstance(data, pd.DataFrame) or isinstance(data, str)
+]
+
 if available_files:
     selected = st.sidebar.radio(
         "Select File",
