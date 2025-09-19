@@ -180,7 +180,7 @@ data = st.session_state.files[selected]
 if isinstance(data, pd.DataFrame):  # CSV
         st.subheader(f"CSV Preview: {selected}")
         st.dataframe(data)
-else:  # TXT
+else if:  # TXT
         st.subheader(f"Text File: {selected}")
         st.text_area("Content", data, height=400)
 else:
