@@ -169,8 +169,6 @@ if available_files:
     index=available_files.index(st.session_state.get("selected_file", available_files[0])),
 )
     st.session_state.selected_file = selected
-
-    st.session_state.selected_file = selected
     data = st.session_state.files[selected]
 
     if isinstance(data, pd.DataFrame):  # CSV
