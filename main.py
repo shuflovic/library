@@ -166,14 +166,20 @@ else:
     
     # Get data for selected file
     data = st.session_state.files.get(selected)
-    if not data:
+    if data is None:
         st.error(f"No data found for file: {selected}")
     elif isinstance(data, pd.DataFrame):  # CSV
-        st.subheader(f"CSV Preview: {selected}")
-        st.dataframe(data)
+        if data.empty:
+            st.error(f"CSV file '{selected}' is empty.")
+        else:
+            st.subheader(f"CSV Preview: {selected}")
+            st.dataframe(data)
     else:  # TXT
-        st.subheader(f"Text File: {selected}")
-        st.text_area("Content", data, height=400)
+        if not data:  # Safe for strings (checks if empty)
+            st.error(f"Text file '{selected}' is empty.")
+        else:
+            st.subheader(f"Text File: {selected}")
+            st.text_area("Content", data, height=400)
 
 # --- Help ---
 with st.sidebar.expander("Setup Instructions"):
