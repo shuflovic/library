@@ -9,11 +9,9 @@ st.sidebar.title("Database Setup")
 supabase_url = st.sidebar.text_input("Enter Supabase URL", "https://rigsljqkzlnemypqjlbk.supabase.co")
 supabase_key = st.sidebar.text_input("Enter Supabase Key", "", type="password")
 OCR_API_KEY = st.sidebar.text_input("Enter OCR API Key", "", type="password")
-
 if not supabase_url or not supabase_key:
     st.error("Please enter both Supabase URL and Key to proceed.")
     st.stop()
-
 supabase: Client = create_client(supabase_url, supabase_key)
 BUCKET_NAME = "libraries"
 
@@ -40,7 +38,6 @@ def load_files_from_supabase():
             if not file_name:
                 continue
             file_data = supabase.storage.from_(BUCKET_NAME).download(file_name)
-
             if file_name.endswith(".csv"):
                 df = pd.read_csv(BytesIO(file_data))
                 files_dict[file_name] = df
@@ -51,14 +48,12 @@ def load_files_from_supabase():
         st.error(f"Error loading from Supabase: {e}")
     return files_dict
 
-
 def upload_csv(uploaded_file):
     """Upload CSV and store as DataFrame."""
     try:
         file_content = uploaded_file.read()
         supabase.storage.from_(BUCKET_NAME).upload(uploaded_file.name, file_content)
         st.success(f"Uploaded '{uploaded_file.name}' to Supabase!")
-
         df = pd.read_csv(BytesIO(file_content))
         st.session_state.files[uploaded_file.name] = df
         st.cache_data.clear()
@@ -66,7 +61,6 @@ def upload_csv(uploaded_file):
         st.rerun()
     except Exception as e:
         st.error(f"Error uploading CSV: {e}")
-
 
 def extract_text_from_image(image_file, api_key, filename="uploaded.jpg"):
     """Send image to OCR API and return text."""
@@ -78,7 +72,6 @@ def extract_text_from_image(image_file, api_key, filename="uploaded.jpg"):
     if result.get("IsErroredOnProcessing"):
         raise Exception(result.get("ErrorMessage", "Unknown OCR error"))
     return result["ParsedResults"][0]["ParsedText"]
-
 
 def process_uploaded_image():
     """Run OCR on image, save TXT to Supabase, and show text."""
@@ -118,6 +111,7 @@ def process_uploaded_image():
             st.rerun()  # Force rerun to update file selector
         except Exception as e:
             st.error(f"Error during OCR: {e}")
+
 # --- Main UI ---
 if st.button("Refresh Files from Supabase"):
     st.session_state.files = load_files_from_supabase()
@@ -139,15 +133,12 @@ uploaded_image = st.sidebar.file_uploader(
 if uploaded_image and "uploaded_image" not in st.session_state:
     st.session_state.uploaded_image = uploaded_image
     st.session_state.approved = False
+
 process_uploaded_image()
 
 if not st.session_state.files:
     st.session_state.files = load_files_from_supabase()
 
-# --- File Viewer ---
-# Include only TXT and CSV files
-# --- File Viewer ---
-# --- File Viewer ---
 # --- File Viewer ---
 available_files = list(st.session_state.files.keys())
 if not available_files:
@@ -183,8 +174,6 @@ else:
     else:  # TXT
         st.subheader(f"Text File: {selected}")
         st.text_area("Content", data, height=400)
-  #  else:
-      #  st.info("No valid file content to display.")
 
 # --- Help ---
 with st.sidebar.expander("Setup Instructions"):
